@@ -218,8 +218,8 @@ func (h *Hub) DeleteQuery(model orm.DataModel, where *dbflex.Filter) error {
 	return err
 }
 
-// Save will save data into database
-func (h *Hub) Save(data orm.DataModel) error {
+// Save will save data into database, if fields is activated it will save the mentioned fields only, fieds will only work with update hence it will assume record arready exist
+func (h *Hub) Save(data orm.DataModel, fields ...string) error {
 	data.SetThis(data)
 	idx, conn, err := h.getConn()
 	if err != nil {
@@ -227,8 +227,16 @@ func (h *Hub) Save(data orm.DataModel) error {
 	}
 	defer h.closeConn(idx, conn)
 
-	if err = orm.Save(conn, data); err != nil {
-		return err
+	if len(fields) == 0 {
+		if err = orm.Save(conn, data); err != nil {
+			return err
+		}
+	} else {
+		w := data.GetFilterID(conn)
+		cmd := dbflex.From(data.TableName()).Where(w).Update(fields...)
+		if _, err := conn.Execute(cmd, toolkit.M{}.Set("data", data)); err != nil {
+			return err
+		}
 	}
 
 	return nil
