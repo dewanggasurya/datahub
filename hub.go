@@ -25,17 +25,19 @@ type Hub struct {
 	txconn dbflex.IConnection
 }
 
-func GeneraDbConnBuilder(txt string) (dbflex.IConnection, error) {
-	conn, e := dbflex.NewConnectionFromURI(txt, nil)
-	if e != nil {
-		return nil, e
-	}
+func GeneraDbConnBuilder(txt string) func() (dbflex.IConnection, error) {
+	return func() (dbflex.IConnection, error) {
+		conn, e := dbflex.NewConnectionFromURI(txt, nil)
+		if e != nil {
+			return nil, e
+		}
 
-	if e = conn.Connect(); e != nil {
-		return nil, fmt.Errorf("fail to connect to datahub. %s", e.Error())
-	}
+		if e = conn.Connect(); e != nil {
+			return nil, fmt.Errorf("fail to connect to datahub. %s", e.Error())
+		}
 
-	return conn, nil
+		return conn, nil
+	}
 }
 
 // NewHub function to create new hub
