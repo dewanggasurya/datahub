@@ -327,6 +327,13 @@ func (h *Hub) GetByID(data orm.DataModel, ids ...interface{}) error {
 	return h.Get(data)
 }
 
+// GetByAttr returns single data based on value on single field. Data need to be comply with orm.DataModel
+func (h *Hub) GetByAttr(data orm.DataModel, attr string, value interface{}) error {
+	w := dbflex.Eq(attr, value)
+	qp := dbflex.NewQueryParam().SetWhere(w).SetTake(1)
+	return h.GetByParm(data, qp)
+}
+
 // GetByParm return single data based on filter
 func (h *Hub) GetByParm(data orm.DataModel, parm *dbflex.QueryParam) error {
 	data.SetThis(data)
