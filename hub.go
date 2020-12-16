@@ -25,7 +25,7 @@ type Hub struct {
 	txconn dbflex.IConnection
 }
 
-func GeneraDbConnBuilder(txt string) func() (dbflex.IConnection, error) {
+func GeneralDbConnBuilder(txt string) func() (dbflex.IConnection, error) {
 	return func() (dbflex.IConnection, error) {
 		conn, e := dbflex.NewConnectionFromURI(txt, nil)
 		if e != nil {
