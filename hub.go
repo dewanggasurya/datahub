@@ -233,7 +233,8 @@ func (h *Hub) DeleteQuery(model orm.DataModel, where *dbflex.Filter) error {
 	return err
 }
 
-// Save will save data into database, if fields is activated it will save the mentioned fields only, fieds will only work with update hence it will assume record arready exist
+// Save will save data into database, if fields is activated it will save the mentioned fields only,
+// fields will only work with update hence it will assume record already exist
 func (h *Hub) Save(data orm.DataModel, fields ...string) error {
 	data.SetThis(data)
 	idx, conn, err := h.getConn()
@@ -334,6 +335,15 @@ func (h *Hub) GetByAttr(data orm.DataModel, attr string, value interface{}) erro
 	return h.GetByParm(data, qp)
 }
 
+/* GetByFilter returns single data based on filter enteered. Data need to be comply with orm.DataModel.
+Because no sort is defined, it will only 1st row by any given sort
+If sort is needed pls use by ByParm
+*/
+func (h *Hub) GetByFilter(data orm.DataModel, filter *dbflex.Filter) error {
+	qp := dbflex.NewQueryParam().SetWhere(filter).SetTake(1)
+	return h.GetByParm(data, qp)
+}
+
 // GetByParm return single data based on filter
 func (h *Hub) GetByParm(data orm.DataModel, parm *dbflex.QueryParam) error {
 	data.SetThis(data)
@@ -369,7 +379,6 @@ func (h *Hub) GetByParm(data orm.DataModel, parm *dbflex.QueryParam) error {
 	if err := cursor.Error(); err != nil {
 		return err
 	}
-	defer cursor.Close()
 	if err = cursor.Fetch(data).Close(); err != nil {
 		return err
 	}
@@ -503,10 +512,22 @@ func (h *Hub) PopulateByParm(tableName string, parm *dbflex.QueryParam, dest int
 	if err = cur.Error(); err != nil {
 		return fmt.Errorf("error when running cursor for PopulateByParm. %s", err.Error())
 	}
-	defer cur.Close()
 
 	err = cur.Fetchs(dest, 0).Close()
 	return err
+}
+
+/*
+PopulateByFilter returns all data based on filter and n count.
+No sort is given, hence it will take n data for resp filter
+If n-count is 0, it will load all
+*/
+func (h *Hub) PopulateByFilter(tableName string, filter *dbflex.Filter, n int, dest interface{}) error {
+	qp := dbflex.NewQueryParam().SetWhere(filter)
+	if n > 0 {
+		qp = qp.SetTake(n)
+	}
+	return h.PopulateByParm(tableName, qp, dest)
 }
 
 // PopulateSQL returns data based on SQL Query
