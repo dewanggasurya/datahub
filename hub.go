@@ -446,6 +446,55 @@ func (h *Hub) Count(data orm.DataModel, qp *dbflex.QueryParam) (int, error) {
 	return cur.Count(), nil
 }
 
+/* GetAnyByFilter returns single data based on filter enteered. Data need to be comply with orm.DataModel.
+Because no sort is defined, it will only 1st row by any given sort
+If sort is needed pls use by ByParm
+*/
+func (h *Hub) GetAnyByFilter(tableName string, filter *dbflex.Filter, dest interface{}) error {
+	qp := dbflex.NewQueryParam().SetWhere(filter).SetTake(1)
+	return h.GetAnyByParm(tableName, qp, dest)
+}
+
+// GetAnyByParm return single data based on filter and table name
+func (h *Hub) GetAnyByParm(tableName string, parm *dbflex.QueryParam, dest interface{}) error {
+	if parm == nil {
+		parm = dbflex.NewQueryParam()
+	}
+
+	idx, conn, err := h.getConn()
+	if err != nil {
+		return fmt.Errorf("connection error. %s", err.Error())
+	}
+	defer h.closeConn(idx, conn)
+
+	cmd := dbflex.From(tableName)
+	if len(parm.Select) == 0 {
+		cmd.Select()
+	} else {
+		cmd.Select(parm.Select...)
+	}
+	if where := parm.Where; where != nil {
+		cmd.Where(where)
+	}
+	if sort := parm.Sort; len(sort) > 0 {
+		cmd.OrderBy(sort...)
+	}
+	if skip := parm.Skip; skip > 0 {
+		cmd.Skip(skip)
+	}
+	if take := parm.Take; take > 0 {
+		cmd.Take(take)
+	}
+	cursor := conn.Cursor(cmd, nil)
+	if err := cursor.Error(); err != nil {
+		return err
+	}
+	if err = cursor.Fetch(dest).Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Execute will execute command. Normally used with no-datamodel object
 func (h *Hub) Execute(cmd dbflex.ICommand, object interface{}) (interface{}, error) {
 	idx, conn, err := h.getConn()
