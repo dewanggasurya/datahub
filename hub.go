@@ -422,6 +422,11 @@ func (h *Hub) Gets(data orm.DataModel, parm *dbflex.QueryParam, dest interface{}
 
 // Count returns number of data based on model and filter
 func (h *Hub) Count(data orm.DataModel, qp *dbflex.QueryParam) (int, error) {
+	return h.CountAny(data.TableName(), qp)
+}
+
+// CountAny returns number of data based on tablename and filter
+func (h *Hub) CountAny(name string, qp *dbflex.QueryParam) (int, error) {
 	if qp == nil {
 		qp = dbflex.NewQueryParam()
 	}
@@ -434,9 +439,9 @@ func (h *Hub) Count(data orm.DataModel, qp *dbflex.QueryParam) (int, error) {
 
 	var cmd dbflex.ICommand
 	if qp == nil || qp.Where == nil {
-		cmd = dbflex.From(data.TableName())
+		cmd = dbflex.From(name)
 	} else {
-		cmd = dbflex.From(data.TableName()).Where(qp.Where)
+		cmd = dbflex.From(name).Where(qp.Where)
 	}
 	cur := conn.Cursor(cmd, nil)
 	if err = cur.Error(); err != nil {
