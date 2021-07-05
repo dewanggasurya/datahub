@@ -40,6 +40,14 @@ func GeneralDbConnBuilder(txt string) func() (dbflex.IConnection, error) {
 	}
 }
 
+type HubOptions struct {
+	AutoClose   time.Duration
+	AutoRelease time.Duration
+	Timeout     time.Duration
+	UsePool     bool
+	PoolSize    int
+}
+
 // NewHub function to create new hub
 func NewHub(fn func() (dbflex.IConnection, error), usePool bool, poolsize int) *Hub {
 	h := new(Hub)
@@ -51,6 +59,27 @@ func NewHub(fn func() (dbflex.IConnection, error), usePool bool, poolsize int) *
 		h.pool = dbflex.NewDbPooling(h.poolSize, h.connFn).SetLog(h.Log())
 		h.pool.Timeout = 7 * time.Second
 		h.pool.AutoClose = 5 * time.Second
+		//h.pool.AutoRelease = 3 * time.Second
+	}
+	return h
+}
+
+// NewHub function to create new hub
+func NewHubWithOpts(fn func() (dbflex.IConnection, error), opts *HubOptions) *Hub {
+	if opts == nil {
+		opts = new(HubOptions)
+	}
+
+	h := new(Hub)
+	h.connFn = fn
+	h.usePool = opts.UsePool
+	h.poolSize = opts.PoolSize
+
+	if h.usePool {
+		h.pool = dbflex.NewDbPooling(h.poolSize, h.connFn).SetLog(h.Log())
+		h.pool.Timeout = opts.Timeout
+		h.pool.AutoClose = opts.AutoClose
+		h.pool.AutoRelease = opts.AutoRelease
 		//h.pool.AutoRelease = 3 * time.Second
 	}
 	return h
