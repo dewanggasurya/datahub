@@ -72,6 +72,12 @@ func NewHubWithOpts(fn func() (dbflex.IConnection, error), opts *HubOptions) *Hu
 
 	h := new(Hub)
 	h.connFn = fn
+	h.SetOptions(opts)
+	return h
+}
+
+// Set Hub Opts
+func (h *Hub) SetOptions(opts *HubOptions) *Hub {
 	h.usePool = opts.UsePool
 	h.poolSize = opts.PoolSize
 
@@ -80,7 +86,6 @@ func NewHubWithOpts(fn func() (dbflex.IConnection, error), opts *HubOptions) *Hu
 		h.pool.Timeout = opts.Timeout
 		h.pool.AutoClose = opts.AutoClose
 		h.pool.AutoRelease = opts.AutoRelease
-		//h.pool.AutoRelease = 3 * time.Second
 	}
 	return h
 }
