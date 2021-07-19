@@ -413,6 +413,7 @@ func (h *Hub) GetByParm(data orm.DataModel, parm *dbflex.QueryParam) error {
 	if err := cursor.Error(); err != nil {
 		return err
 	}
+	defer cursor.Close()
 	if err = cursor.Fetch(data).Close(); err != nil {
 		return err
 	}
@@ -600,6 +601,7 @@ func (h *Hub) PopulateByParm(tableName string, parm *dbflex.QueryParam, dest int
 	if err = cur.Error(); err != nil {
 		return fmt.Errorf("error when running cursor for PopulateByParm. %s", err.Error())
 	}
+	defer cur.Close()
 
 	err = cur.Fetchs(dest, 0).Close()
 	return err
